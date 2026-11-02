@@ -22,10 +22,6 @@ button:disabled { opacity: .65; cursor: wait; }
 .station { margin: 2px 0 17px; color: #647168; font-size: .9rem; }
 .flow { margin: 0; font-size: 2rem; font-weight: 750; letter-spacing: -.04em; }
 .unit { color: #647168; font-size: .9rem; font-weight: 500; letter-spacing: 0; }
-.badge { display: inline-block; margin-top: 13px; padding: 5px 9px; border-radius: 999px; background: #e8f4ec; color: #17633e; font-size: .82rem; font-weight: 650; }
-.badge.red { background: #fce8e5; color: #a02e24; }
-.badge.stale { background: #fff1d7; color: #674400; }
-.details { margin: 15px 0 0; padding-top: 12px; border-top: 1px solid #edf0ed; color: #526159; font-size: .86rem; line-height: 1.7; }
 .empty { grid-column: 1 / -1; padding: 24px; border: 1px dashed #cbd5ce; border-radius: 12px; color: #526159; background: white; text-align: center; }
 .source { margin-top: 20px; color: #647168; font-size: .85rem; line-height: 1.6; }
 .source a { color: #176b48; }

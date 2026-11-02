@@ -19,9 +19,8 @@ Presiona `Ctrl+C` en la ventana para cerrar el servidor.
 ## Cómo funciona
 
 - Lee el caudal y la hora más reciente de los gráficos horarios de Chosica, Obrajillo y Antapucro.
-- Consulta los gráficos y los umbrales oficiales de SENAMHI al iniciar y luego cada 20 minutos. Puede repetir la misma lectura hasta que la estación publique el siguiente dato horario.
-- Marca la lectura como desactualizada si tiene más de 90 minutos, y muestra siempre la hora reportada por la estación.
+- Consulta los gráficos de SENAMHI al iniciar y luego cada 20 minutos. Puede repetir el mismo caudal hasta que la estación publique el siguiente dato horario.
 - Guarda la última lectura válida en `data/estado.json`; si una consulta falla, conserva esa lectura e informa el error.
-- La etiqueta de estado compara el caudal reportado con el umbral rojo de la propia tabla de SENAMHI. No envía alertas ni reemplaza una alerta oficial.
+- La página muestra solo el caudal reportado por cada estación y la hora de consulta. No calcula niveles de peligro ni envía alertas.
 
 La extracción depende del endpoint público de SENAMHI y podría requerir ajustes si el sitio cambia.

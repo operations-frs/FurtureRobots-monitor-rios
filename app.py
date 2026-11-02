@@ -21,7 +21,6 @@ STATIC_ASSETS = {
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
 }
 SITE_ROOT = "https://www.senamhi.gob.pe/"
-TABLE_URL = urljoin(SITE_ROOT, "include/ajax-informacion-diaria-chirilu.php")
 GRAPH_URL = urljoin(SITE_ROOT, "include/ajax-idesep-chirilu.php")
 SOURCE_PAGE = "https://www.senamhi.gob.pe/?dp=piura&p=monitoreo-chirilu"
 POLL_SECONDS = 20 * 60
@@ -63,44 +62,11 @@ def _save_state() -> None:
     temporary.replace(STATE_FILE)
 
 
-def _latest_source_slot(now: datetime) -> tuple[str, str]:
-    """La tabla diaria se consulta solo para obtener el umbral oficial."""
-    slot_hour = (now.hour // 6) * 6
-    return now.strftime("%Y-%m-%d"), f"{slot_hour:02d}:00"
-
-
 def _number(value):
     try:
         return float(value) if value is not None else None
     except (TypeError, ValueError):
         return None
-
-
-def _read_thresholds(now: datetime) -> dict[str, float | None]:
-    source_date, source_hour = _latest_source_slot(now)
-    payload = urlencode({"fecha": source_date, "hora": source_hour}).encode()
-    request = Request(
-        TABLE_URL,
-        data=payload,
-        headers={
-            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-            "User-Agent": "Monitor-Local-CHIRILU/1.0",
-            "Referer": SOURCE_PAGE,
-        },
-        method="POST",
-    )
-    with urlopen(request, timeout=25) as response:
-        result = json.loads(response.read().decode("utf-8"))
-    if not result.get("success"):
-        raise ValueError(result.get("message") or "No se pudieron leer los umbrales.")
-
-    thresholds = {}
-    for item in (result.get("content") or {}).values():
-        station = str(item.get("nomEsta", "")).strip().upper()
-        if station not in STATIONS:
-            continue
-        thresholds[station] = _number(item.get("umbralRojo"))
-    return thresholds
 
 
 def _extract_chart_data(html: str) -> dict:
@@ -144,7 +110,7 @@ def _extract_chart_data(html: str) -> dict:
         raise ValueError("La serie horaria recibida no tiene formato JSON válido.") from exc
 
 
-def _read_hourly_station(station_name: str, threshold: float | None, now: datetime) -> dict:
+def _read_hourly_station(station_name: str, now: datetime) -> dict:
     river, station_label, graph_key = STATIONS[station_name]
     payload = urlencode({"estacion": graph_key}).encode()
     request = Request(
@@ -185,24 +151,11 @@ def _read_hourly_station(station_name: str, threshold: float | None, now: dateti
         raise ValueError(f"El gráfico de {station_label} no contiene caudales horarios válidos.")
 
     timestamp_ms, flow = max(observations, key=lambda point: point[0])
-    observation_time = datetime.fromtimestamp(timestamp_ms / 1000, TIMEZONE)
-    age_minutes = max(0, int((now - observation_time).total_seconds() // 60))
     return {
         "rio": river,
         "estacion": station_label,
         "caudal": flow,
         "unidad": series.get("unidad") or "m³/s",
-        "fecha_hora_dato": observation_time.isoformat(timespec="minutes"),
-        "antiguedad_minutos": age_minutes,
-        "desactualizada": age_minutes > 90,
-        "umbral_rojo": threshold,
-        "estado": (
-            "Umbral rojo alcanzado"
-            if threshold is not None and flow >= threshold
-            else "Debajo del umbral rojo"
-            if threshold is not None
-            else "Umbral rojo no disponible"
-        ),
     }
 
 
@@ -214,9 +167,8 @@ def refresh_data() -> dict:
 
     try:
         now = datetime.now(TIMEZONE)
-        thresholds = _read_thresholds(now)
         rows = [
-            _read_hourly_station(station, thresholds.get(station), now)
+            _read_hourly_station(station, now)
             for station in STATIONS
         ]
 

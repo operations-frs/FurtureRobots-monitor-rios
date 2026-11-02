@@ -32,25 +32,11 @@ function render(state) {
   }
 
   cards.innerHTML = state.datos.map((item) => {
-    const alert = item.estado === "Umbral rojo alcanzado";
-    const stale = item.desactualizada;
-    const observedAt = item.fecha_hora_dato
-      ? new Date(item.fecha_hora_dato).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" })
-      : "Sin dato";
-    const age = item.antiguedad_minutos >= 60
-      ? `${Math.floor(item.antiguedad_minutos / 60)} h ${item.antiguedad_minutos % 60} min`
-      : `${item.antiguedad_minutos} min`;
     return `
       <article class="card">
         <h2 class="river">Río ${item.rio}</h2>
         <p class="station">Estación ${item.estacion}</p>
         <p class="flow">${formatNumber(item.caudal)} <span class="unit">m³/s</span></p>
-        <span class="badge ${alert ? "red" : ""}">${item.estado}</span>
-        ${stale ? `<span class="badge stale">Lectura con ${age} de antigüedad</span>` : ""}
-        <p class="details">
-          Lectura horaria: <strong>${observedAt}</strong><br>
-          Umbral rojo: <strong>${formatNumber(item.umbral_rojo)} m³/s</strong>
-        </p>
       </article>`;
   }).join("");
 }
