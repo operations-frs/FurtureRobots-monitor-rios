@@ -183,14 +183,12 @@ def _read_hourly_station(station_name: str, threshold: float | None, now: dateti
     if not observations:
         raise ValueError(f"El gráfico de {station_label} no contiene caudales horarios válidos.")
 
-    timestamp_ms, flow = max(observations, key=lambda point: point[0])
-    observation_time = datetime.fromtimestamp(timestamp_ms / 1000, TIMEZONE)
+    _, flow = max(observations, key=lambda point: point[0])
     return {
         "rio": river,
         "estacion": station_label,
         "caudal": flow,
         "unidad": series.get("unidad") or "m³/s",
-        "fecha_hora_dato": observation_time.isoformat(timespec="minutes"),
         "umbral_rojo": threshold,
         "estado": (
             "Umbral rojo alcanzado"
