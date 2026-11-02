@@ -11,6 +11,8 @@ La interfaz separa estructura, estilos y comportamiento en `web/index.html`, `we
 3. Espera el mensaje `Monitor CHIRILU listo en http://127.0.0.1:8000`.
 4. Abre [http://127.0.0.1:8000](http://127.0.0.1:8000) en el navegador.
 
+No abras `web/index.html` directamente: al abrirlo como archivo local se muestra el aviso para iniciar el servidor, pero no se pueden consultar los caudales.
+
 También puedes iniciarlo desde PowerShell, en esta carpeta, con `python app.py`.
 Presiona `Ctrl+C` en la ventana para cerrar el servidor.
 

@@ -2,6 +2,15 @@ const cards = document.querySelector("#cards");
 const meta = document.querySelector("#meta");
 const notice = document.querySelector("#notice");
 const button = document.querySelector("#refresh");
+const localHostnames = ["127.0.0.1", "localhost"];
+const isLocalServer = localHostnames.includes(window.location.hostname);
+
+function showServerInstructions() {
+  meta.textContent = "Servidor local no iniciado";
+  notice.textContent = "Para cargar los caudales, ejecuta iniciar.bat y abre http://127.0.0.1:8000.";
+  notice.classList.add("error");
+  button.disabled = true;
+}
 
 function formatNumber(value, digits = 2) {
   return typeof value === "number"
@@ -52,7 +61,9 @@ async function loadStatus() {
     if (!response.ok) throw new Error("No se pudo leer el estado local.");
     render(await response.json());
   } catch (error) {
-    notice.textContent = error.message;
+    notice.textContent = isLocalServer
+      ? error.message
+      : "Para cargar los caudales, ejecuta iniciar.bat y abre http://127.0.0.1:8000.";
     notice.classList.add("error");
   }
 }
@@ -64,7 +75,9 @@ button.addEventListener("click", async () => {
     const response = await fetch("/api/refresh", { method: "POST" });
     render(await response.json());
   } catch (error) {
-    notice.textContent = error.message;
+    notice.textContent = isLocalServer
+      ? error.message
+      : "Para cargar los caudales, ejecuta iniciar.bat y abre http://127.0.0.1:8000.";
     notice.classList.add("error");
   } finally {
     button.disabled = false;
@@ -72,5 +85,9 @@ button.addEventListener("click", async () => {
   }
 });
 
-loadStatus();
-setInterval(loadStatus, 60_000);
+if (isLocalServer) {
+  loadStatus();
+  setInterval(loadStatus, 60_000);
+} else {
+  showServerInstructions();
+}
