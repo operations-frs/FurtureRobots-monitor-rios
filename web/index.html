@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7f4">
+  <title>Caudales CHIRILU</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <main>
+    <h1>Caudales de los ríos CHIRILU</h1>
+    <p class="intro">Lecturas de las estaciones principales del Chillón, Rímac y Lurín.</p>
+
+    <section class="toolbar" aria-label="Actualización de datos">
+      <button id="refresh" type="button">Actualizar ahora</button>
+      <div class="meta" id="meta">Cargando información…</div>
+    </section>
+    <div id="notice" role="status"></div>
+    <section id="cards" aria-live="polite"></section>
+    <p class="source">
+      Fuente: <a href="https://www.senamhi.gob.pe/?dp=piura&amp;p=monitoreo-chirilu" target="_blank" rel="noreferrer">SENAMHI, monitoreo CHIRILU</a>.
+      El caudal y su hora provienen del gráfico horario de cada estación. El umbral rojo se toma de la tabla hidrológica oficial de SENAMHI.
+    </p>
+  </main>
+</body>
+</html>
