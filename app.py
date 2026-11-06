@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -99,6 +100,7 @@ def _read_thresholds(now: datetime) -> dict[str, float | None]:
         station = str(item.get("nomEsta", "")).strip().upper()
         if station in STATIONS:
             thresholds[station] = _number(item.get("umbralRojo"))
+
     return thresholds
 
 
@@ -143,7 +145,7 @@ def _extract_chart_data(html: str) -> dict:
         raise ValueError("La serie horaria recibida no tiene formato JSON válido.") from exc
 
 
-def _read_hourly_station(station_name: str, threshold: float | None, now: datetime) -> dict:
+def _read_hourly_station(station_name: str, now: datetime) -> dict:
     river, station_label, graph_key = STATIONS[station_name]
     payload = urlencode({"estacion": graph_key}).encode()
     request = Request(
@@ -189,30 +191,51 @@ def _read_hourly_station(station_name: str, threshold: float | None, now: dateti
         "estacion": station_label,
         "caudal": flow,
         "unidad": series.get("unidad") or "m³/s",
-        "umbral_rojo": threshold,
-        "estado": (
-            "Umbral rojo alcanzado"
-            if threshold is not None and flow >= threshold
-            else "Debajo del umbral rojo"
-            if threshold is not None
-            else "Umbral rojo no disponible"
-        ),
+        "umbral_rojo": None,
+        "estado": "Umbral rojo no disponible",
     }
 
 
 def refresh_data() -> dict:
     """Lee los caudales horarios del gráfico y conserva el último éxito."""
     if not _refresh_lock.acquire(blocking=False):
-        with _state_lock:
-            return dict(_state)
+        # Si una actualización ya está en curso (por ejemplo, la inicial al
+        # abrir), esperamos esa misma consulta en lugar de devolver datos viejos.
+        _refresh_lock.acquire()
+        try:
+            with _state_lock:
+                return dict(_state)
+        finally:
+            _refresh_lock.release()
 
     try:
         now = datetime.now(TIMEZONE)
-        thresholds = _read_thresholds(now)
-        rows = [
-            _read_hourly_station(station, thresholds.get(station), now)
-            for station in STATIONS
-        ]
+        # Las consultas son independientes: no esperamos a que termine una
+        # estación para empezar la siguiente ni al umbral para leer los gráficos.
+        with ThreadPoolExecutor(max_workers=len(STATIONS) + 1) as executor:
+            threshold_future = executor.submit(_read_thresholds, now)
+            station_futures = [
+                executor.submit(_read_hourly_station, station, now)
+                for station in STATIONS
+            ]
+            thresholds = threshold_future.result()
+            rows = [future.result() for future in station_futures]
+
+        for row in rows:
+            station_name = next(
+                key for key, (_river, label, _graph) in STATIONS.items()
+                if label == row["estacion"]
+            )
+            threshold = thresholds.get(station_name)
+            flow = row["caudal"]
+            row["umbral_rojo"] = threshold
+            row["estado"] = (
+                "Umbral rojo alcanzado"
+                if threshold is not None and flow >= threshold
+                else "Debajo del umbral rojo"
+                if threshold is not None
+                else "Umbral rojo no disponible"
+            )
 
         with _state_lock:
             _state.update(
@@ -287,7 +310,8 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 def main() -> None:
     _load_state()
-    refresh_data()
+    # Abrir la web no debe esperar a que SENAMHI responda por primera vez.
+    threading.Thread(target=refresh_data, daemon=True, name="senamhi-initial-refresh").start()
     threading.Thread(target=_poll_forever, daemon=True, name="senamhi-poller").start()
     server = ThreadingHTTPServer(("127.0.0.1", 8000), RequestHandler)
     print("Monitor CHIRILU listo en http://127.0.0.1:8000")
