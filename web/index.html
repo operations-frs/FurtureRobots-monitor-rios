@@ -6,6 +6,8 @@
   <meta name="theme-color" content="#f5f7f4">
   <title>Caudales CHIRILU</title>
   <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -14,11 +16,21 @@
     <p class="intro">Lecturas de las estaciones principales del Chillón, Rímac y Lurín.</p>
 
     <section class="toolbar" aria-label="Actualización de datos">
-      <button id="refresh" type="button">Actualizar ahora</button>
+      <div class="toolbar-actions">
+        <button id="refresh" type="button">Actualizar ahora</button>
+        <button id="alerts" class="subscribe-button" type="button" disabled>Recibir Alertas</button>
+      </div>
       <div class="meta" id="meta">Cargando información…</div>
     </section>
     <div id="notice" role="status"></div>
     <section id="cards" aria-live="polite"></section>
+    <section class="trends-section" aria-labelledby="trends-title">
+      <div class="trends-header">
+        <h2 id="trends-title">Tendencia de caudales</h2>
+        <p>Últimas 12 lecturas horarias por río</p>
+      </div>
+      <div id="charts" class="trends-grid" aria-live="polite"></div>
+    </section>
     <p class="source">
       Fuente: <a href="https://www.senamhi.gob.pe/?dp=piura&amp;p=monitoreo-chirilu" target="_blank" rel="noreferrer">SENAMHI, monitoreo CHIRILU</a>.
       El caudal y su hora provienen del gráfico horario de cada estación. El umbral rojo se toma de la tabla hidrológica oficial de SENAMHI.
