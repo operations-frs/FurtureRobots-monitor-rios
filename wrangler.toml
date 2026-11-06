@@ -1,0 +1,19 @@
+name = "monitor-rios"
+main = "src/worker.js"
+compatibility_date = "2026-11-03"
+
+[vars]
+ONESIGNAL_APP_ID = "361a6fe4-20bc-4624-8603-3ceebb5bb4b7"
+
+[assets]
+directory = "./web"
+binding = "ASSETS"
+run_worker_first = ["/api/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "monitor-rios-db"
+database_id = "63607802-c75f-47d3-ab12-61d3aeff30ba"
+
+[triggers]
+crons = ["*/20 * * * *", "0 3 * * *"]

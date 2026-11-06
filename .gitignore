@@ -1,3 +1,6 @@
 __pycache__/
 data/estado.json
 data/estado.tmp
+node_modules/
+.wrangler/
+.dev.vars
